@@ -20,17 +20,15 @@ func main() {
 	defer conn.Close()
 
 	for {
-		buf := make([]byte, 1024)
-		_, err := conn.Read(buf)
+		resp := NewResp(conn)
+		value, err := resp.read()
 		if err != nil {
-			if err.Error() == "EOF" {
-				fmt.Println("Connection closed")
-				return
-			}
 			fmt.Println(err)
 			return
 		}
 
-		conn.Write([]byte("OK\r\n"))
+		fmt.Println(value)
+
+		conn.Write([]byte("+OK\r\n"))
 	}
 }
