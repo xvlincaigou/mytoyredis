@@ -26,6 +26,26 @@ func main() {
 		return
 	}
 
+	aof, err := NewAof("database.aof")
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	defer aof.Close()
+
+	aof.Read(func(value Value) {
+		command := strings.ToUpper(value.array[0].bulk)
+		args := value.array[1:]
+
+		handler, ok := Handlers[command]
+		if !ok {
+			fmt.Println("Invalid command: ", command)
+			return
+		}
+
+		handler(args)
+	})
+
 	// Accept waits for and returns the next connection to the listener.
 	// conn is a generic network connection.
 	// When l.Accept() is called, it blocks until a connection is made. Once a connection is made, it returns a net.Conn object.
