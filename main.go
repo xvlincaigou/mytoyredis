@@ -33,11 +33,13 @@ func main() {
 	}
 	defer aof.Close()
 
+	// Read the commands from the AOF file and execute them.
+	// The func is the parameter of the Read method. It is a function that takes a Value as an argument and returns nothing.
 	aof.Read(func(value Value) {
 		command := strings.ToUpper(value.array[0].bulk)
 		args := value.array[1:]
 
-		handler, ok := Handlers[command]
+		handler, ok := Handler[command]
 		if !ok {
 			fmt.Println("Invalid command: ", command)
 			return
@@ -100,6 +102,11 @@ func main() {
 			fmt.Println("Invalid command", cmd)
 			writer.Write(Value{typ: "string", str: "ERR unknown command '" + cmd + "'"})
 			continue
+		}
+
+		// If the command is SET, then we write the command to the AOF file.
+		if cmd == "SET" {
+			aof.Write(value)
 		}
 
 		// We call the function with the arguments and get the result.
