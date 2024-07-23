@@ -7,6 +7,13 @@ import (
 	"fmt"
 )
 
+/* 
+Different between bulk string and simple string:
+bulk string : $<length>\r\n<data>\r\n
+e.g. $6\r\nfoobar\r\n
+simple string : +<data>\r\n
+e.g. +OK\r\n
+*/
 const (
 	STRING  = '+'
 	ERROR   = '-'
@@ -23,10 +30,22 @@ type Value struct {
 	array []Value
 }
 
+/*
+Package bufio implements buffered I/O. 
+It wraps an io.Reader or io.Writer object, creating another object (Reader or Writer) that 
+also implements the interface but provides buffering and some help for textual I/O.
+*/
+/*
+strings.NewReader(s string) *strings.Reader
+func NewReader(s string) *Reader
+NewReader returns a new Reader reading from s. It is similar to bytes.NewBufferString but more efficient and non-writable.
+*/
+
 type Resp struct {
 	reader *bufio.Reader
 }
 
+// It is like factory method!
 func NewResp(rd io.Reader) *Resp {
 	return &Resp{reader: bufio.NewReader(rd)}
 }
@@ -58,12 +77,18 @@ func (r *Resp) readInteger() (x int, n int, err error) {
 	return int(i64), n, nil
 }
 
+// Read the command from the connection
+// r *Resp is a pointer to the Resp object, it is a receiver. This read() method is binded to the Resp object.
+// param: none
+// return: Value, error
 func (r *Resp) read() (Val Value, err error) {
 	_type, err := r.reader.ReadByte()
 	if err != nil {
 		return Value{}, err
 	}
 	switch _type {
+	// In our toy redis, the command is always an array of strings.
+	// So we only need to consider these two cases.
 	case ARRAY:
 		return r.readArray()
 	case BULK:
